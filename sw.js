@@ -1,7 +1,26 @@
-var CACHE = "imposter-v2";
+var CACHE = "imposter-v3";
 var FILES = [
   "/",
   "/index.html",
+  "/how-to-play/",
+  "/online/",
+  "/free/",
+  "/unblocked/",
+  "/impostor-game/",
+  "/io/",
+  "/offline/",
+  "/one-phone/",
+  "/lookalike/",
+  "/decks/",
+  "/decks/supper/",
+  "/decks/creatures/",
+  "/decks/out/",
+  "/decks/house/",
+  "/decks/weather/",
+  "/decks/work/",
+  "/decks/play/",
+  "/decks/class/",
+  "/decks/closet/",
   "/css/game.css",
   "/js/engine.js",
   "/js/words.js",
@@ -10,7 +29,8 @@ var FILES = [
   "/fonts/outfit-500.woff2",
   "/fonts/outfit-700.woff2",
   "/favicon.svg",
-  "/manifest.webmanifest"
+  "/manifest.webmanifest",
+  "/sitemap.xml"
 ];
 
 self.addEventListener("install", function (event) {

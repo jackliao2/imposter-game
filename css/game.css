@@ -482,6 +482,46 @@ summary { cursor: pointer; }
   border: 0;
 }
 
+.site-nav {
+  width: auto;
+  max-width: 440px;
+  margin: 12px auto 0;
+  padding: 0 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 0.84rem;
+}
+
+.site-nav a { color: var(--brass); text-decoration: none; }
+
+.site-nav a[aria-current="page"] { color: var(--paper); }
+
+body.playing .site-nav { display: none; }
+
+.read a { color: var(--brass); }
+
+.crumbs { color: var(--muted); font-size: 0.8rem; margin: 0 0 8px; }
+
+.crumbs a { color: var(--brass); }
+
+.clues, .counts { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 0.95rem; }
+
+.clues th, .clues td, .counts th, .counts td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.clues th, .counts th {
+  color: var(--brass);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
 .shake { animation: shake 0.35s linear; }
 
 @keyframes shake {

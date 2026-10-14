@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://imposter-game-one.vercel.app/</loc>
-  </url>
+  <url><loc>https://imposter-game-one.vercel.app/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/how-to-play/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/online/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/free/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/unblocked/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/impostor-game/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/io/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/offline/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/one-phone/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/lookalike/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/supper/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/creatures/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/out/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/house/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/weather/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/work/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/play/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/class/</loc></url>
+  <url><loc>https://imposter-game-one.vercel.app/decks/closet/</loc></url>
 </urlset>
