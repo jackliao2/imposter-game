@@ -113,7 +113,7 @@ function articleSentences(html) {
 }
 function statesDifference(sentence) {
   const s = sentence.toLowerCase();
-  const written = /written clues/.test(s) && /remain|readable|standing|view|pinned|posted|visible/.test(s);
+  const written = /\b(two|both)\b/.test(s) && /written clues/.test(s) && /remain|readable|standing|view|pinned|posted|visible/.test(s);
   const vote = /vote|voting|ballot|voter/.test(s) && /slip/.test(s);
   const steal = /one guess/.test(s) && /steal/.test(s);
   return written && vote && steal;
