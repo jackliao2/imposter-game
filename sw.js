@@ -1,4 +1,4 @@
-var CACHE = "imposter-v3";
+var CACHE = "imposter-v4";
 var FILES = [
   "/",
   "/index.html",
@@ -21,6 +21,10 @@ var FILES = [
   "/decks/play/",
   "/decks/class/",
   "/decks/closet/",
+  "/decks/screen/",
+  "/the-imposter-game/",
+  "/browser/",
+  "/compare/",
   "/css/game.css",
   "/js/engine.js",
   "/js/words.js",

@@ -1,0 +1,10 @@
+{
+  "name": "imposter-game",
+  "private": true,
+  "scripts": {
+    "test": "node test/niche-pages.js && node test/play-round.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

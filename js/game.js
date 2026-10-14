@@ -15,7 +15,8 @@
     { id: "jobs", label: "Work", stripe: "#b9a06a" },
     { id: "sports", label: "Play", stripe: "#6aaa72" },
     { id: "school", label: "Class", stripe: "#8d7cc4" },
-    { id: "clothes", label: "Closet", stripe: "#c47aa6" }
+    { id: "clothes", label: "Closet", stripe: "#c47aa6" },
+    { id: "screen", label: "Screen", stripe: "#d4a017" }
   ];
 
   var state = {
@@ -721,7 +722,7 @@
     var deck = document.body.getAttribute("data-deck");
     var mode = document.body.getAttribute("data-mode");
     var voice = document.body.getAttribute("data-voice");
-    var known = { mixed: 1, food: 1, animals: 1, places: 1, home: 1, nature: 1, jobs: 1, sports: 1, school: 1, clothes: 1 };
+    var known = { mixed: 1, food: 1, animals: 1, places: 1, home: 1, nature: 1, jobs: 1, sports: 1, school: 1, clothes: 1, screen: 1 };
     if (deck && known[deck]) state.category = deck;
     if (mode === "classic" || mode === "cousin") state.mode = mode;
     if (voice === "spoken") state.voice = true;

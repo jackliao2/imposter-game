@@ -107,6 +107,21 @@
         "gown","kimono","overalls","scrubs","lab coat","jersey","wristband","tracksuit","windbreaker","shawl",
         "cape","bow tie","pocket watch","anklet","tote","clutch","satchel","duffel","zipper","collar",
         "denim","leather","silk","wool","cotton","linen","velvet","fleece","cleats","apron"
+      ],
+      screen: [
+        "titanic","jaws","frozen","shrek","moana","coco","nemo","aladdin","mulan",
+        "ratatouille","zootopia","casablanca","psycho","home alone","grease","rocky",
+        "inception","up","wall-e","toy story","monsters inc","the incredibles","spirited away",
+        "totoro","ponyo","kiki","brave","encanto","luca","soul","onward",
+        "finding dory","the lion king","cinderella","pinocchio","bambi","dumbo",
+        "mary poppins","the wizard of oz","et","jurassic park","mean girls","clueless",
+        "whiplash","la la land","interstellar","get out","inside out",
+        "big hero","wreck-it ralph","madagascar","kung fu panda",
+        "friends","seinfeld","the office","parks and recreation","ted lasso","schitts creek",
+        "abbott elementary","stranger things","the simpsons","bluey","doctor who","sherlock",
+        "gravity falls","avatar","adventure time","the good place","brooklyn nine-nine",
+        "the crown","bridgerton","wednesday","gilmore girls","the x-files",
+        "twin peaks","lost","survivor"
       ]
     },
     cousins: [
