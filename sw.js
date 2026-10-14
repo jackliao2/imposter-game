@@ -1,4 +1,4 @@
-var CACHE = "imposter-v1";
+var CACHE = "imposter-v2";
 var FILES = [
   "/",
   "/index.html",
@@ -6,6 +6,9 @@ var FILES = [
   "/js/engine.js",
   "/js/words.js",
   "/js/game.js",
+  "/fonts/fraunces-600.woff2",
+  "/fonts/outfit-500.woff2",
+  "/fonts/outfit-700.woff2",
   "/favicon.svg",
   "/manifest.webmanifest"
 ];

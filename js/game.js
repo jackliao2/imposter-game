@@ -5,12 +5,26 @@
   var timerId = null;
   var holdPointer = null;
 
+  var decks = [
+    { id: "mixed", label: "The room", stripe: "#e4c48a" },
+    { id: "food", label: "Supper", stripe: "#d07a45" },
+    { id: "animals", label: "Creatures", stripe: "#d2a15a" },
+    { id: "places", label: "Out", stripe: "#3d8f86" },
+    { id: "home", label: "House", stripe: "#c46b6b" },
+    { id: "nature", label: "Weather", stripe: "#7ea2c4" },
+    { id: "jobs", label: "Work", stripe: "#b9a06a" },
+    { id: "sports", label: "Play", stripe: "#6aaa72" },
+    { id: "school", label: "Class", stripe: "#8d7cc4" },
+    { id: "clothes", label: "Closet", stripe: "#c47aa6" }
+  ];
+
   var state = {
     screen: "setup",
     playerCount: 5,
     imposterCount: 1,
     category: "mixed",
     mode: "classic",
+    voice: false,
     names: ["", "", "", "", ""],
     muted: false,
     tableWins: 0,
@@ -21,6 +35,7 @@
     secret: "",
     cousin: "",
     imposterIds: [],
+    clues: {},
     passIndex: 0,
     seen: false,
     clueLap: 0,
@@ -52,6 +67,7 @@
       state.imposterCount = engine.clampImposters(state.playerCount, saved.imposterCount || 1);
       if (saved.category) state.category = saved.category;
       if (saved.mode === "cousin" || saved.mode === "classic") state.mode = saved.mode;
+      if (typeof saved.voice === "boolean") state.voice = saved.voice;
       if (Array.isArray(saved.names)) state.names = saved.names;
       if (typeof saved.muted === "boolean") state.muted = saved.muted;
       fitNames();
@@ -62,14 +78,15 @@
 
   function saveSettings() {
     try {
-    localStorage.setItem("imposter-settings", JSON.stringify({
-      playerCount: state.playerCount,
-      imposterCount: state.imposterCount,
-      category: state.category,
-      mode: state.mode,
-      names: state.names,
-      muted: state.muted
-    }));
+      localStorage.setItem("imposter-settings", JSON.stringify({
+        playerCount: state.playerCount,
+        imposterCount: state.imposterCount,
+        category: state.category,
+        mode: state.mode,
+        voice: state.voice,
+        names: state.names,
+        muted: state.muted
+      }));
     } catch (err) {
       return;
     }
@@ -100,7 +117,7 @@
   }
 
   function beep(freq, ms) {
-    if (state.muted || !window.AudioContext && !window.webkitAudioContext) return;
+    if (state.muted || (!window.AudioContext && !window.webkitAudioContext)) return;
     try {
       var Ctx = window.AudioContext || window.webkitAudioContext;
       var ctx = beep.ctx || (beep.ctx = new Ctx());
@@ -108,7 +125,7 @@
       var gain = ctx.createGain();
       osc.frequency.value = freq;
       osc.type = "triangle";
-      gain.gain.value = 0.04;
+      gain.gain.value = 0.045;
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
@@ -139,18 +156,38 @@
     return out;
   }
 
+  function slipText(id) {
+    var list = (state.clues[id] || []).filter(Boolean);
+    return list.join(" · ");
+  }
+
+  function seatsHtml(activeId) {
+    var list = players();
+    return list.map(function (p, i) {
+      var angle = (-90 + (i * 360) / list.length) * Math.PI / 180;
+      var x = 50 + Math.cos(angle) * 46;
+      var y = 46 + Math.sin(angle) * 40;
+      var text = slipText(p.id);
+      var burned = state.screen === "result" && state.imposterIds.indexOf(p.id) !== -1;
+      var slip = text ? '<div class="slip' + (burned ? " burned" : "") + '">' + escapeHtml(text) + "</div>" : "";
+      return '<div class="seat' + (p.id === activeId ? " is-now" : "") + '" data-i="' + i + '" style="left:' + x.toFixed(1) + "%;top:" + y.toFixed(1) + '%"><span class="seat-name">' + escapeHtml(p.name) + "</span>" + slip + "</div>";
+    }).join("");
+  }
+
+  function tableHtml(activeId, hub) {
+    return '<div class="table-wrap"><div class="oval"></div>' + seatsHtml(activeId) + '<div class="hub">' + hub + "</div></div>";
+  }
+
   function startRound() {
     fitNames();
     saveSettings();
     var used = {};
     state.used.forEach(function (word) { used[word.toLowerCase()] = true; });
     var usedSet = {
-      has: function (word) { return !!used[String(word).toLowerCase()]; },
-      add: function (word) { used[String(word).toLowerCase()] = true; }
+      has: function (word) { return !!used[String(word).toLowerCase()]; }
     };
-    var deal;
     if (state.mode === "cousin") {
-      deal = engine.pickCousin(pack, usedSet, rng);
+      var deal = engine.pickCousin(pack, usedSet, rng);
       state.secret = deal.secret;
       state.cousin = deal.cousin;
     } else {
@@ -161,6 +198,7 @@
     if (state.cousin) state.used.push(state.cousin.toLowerCase());
     var ids = players().map(function (p) { return p.id; });
     state.imposterIds = engine.pickImposters(ids, state.imposterCount, rng);
+    state.clues = {};
     state.round += 1;
     state.passIndex = 0;
     state.seen = false;
@@ -169,7 +207,7 @@
     state.votes = {};
     state.ballotIndex = 0;
     state.ballotSeen = false;
-    state.discussLeft = 45;
+    state.discussLeft = 40;
     state.steal = "";
     state.leaders = [];
     state.caught = false;
@@ -185,9 +223,7 @@
 
   function cardFor(player) {
     var isImpostor = state.imposterIds.indexOf(player.id) !== -1;
-    if (state.mode === "cousin") {
-      return { kind: "word", word: isImpostor ? state.cousin : state.secret };
-    }
+    if (state.mode === "cousin") return { kind: "word", word: isImpostor ? state.cousin : state.secret };
     if (isImpostor) return { kind: "imposter" };
     return { kind: "word", word: state.secret };
   }
@@ -197,7 +233,7 @@
     if (!next || !state.seen) return;
     var last = state.passIndex + 1 >= state.playerCount;
     next.disabled = false;
-    next.textContent = last ? "Everyone has a card" : "Pass to " + players()[state.passIndex + 1].name;
+    next.textContent = last ? "Clues go on the table" : "Pass to " + players()[state.passIndex + 1].name;
   }
 
   function finishPass() {
@@ -211,9 +247,8 @@
   }
 
   function advanceClue() {
-    var list = players();
     state.clueStep += 1;
-    if (state.clueStep >= list.length) {
+    if (state.clueStep >= players().length) {
       state.clueStep = 0;
       state.clueLap += 1;
     }
@@ -224,9 +259,26 @@
     draw();
   }
 
+  function pinClue(raw) {
+    var speaker = orderFrom(state.startOffset)[state.clueStep];
+    var word = state.voice ? "…" : String(raw || "").replace(/\s+/g, " ").trim();
+    if (!state.voice) {
+      if (!word || word.split(" ").length > 2) {
+        var input = document.getElementById("clue-input");
+        if (input) input.classList.add("shake");
+        return;
+      }
+    }
+    var list = (state.clues[speaker.id] || []).slice();
+    list[state.clueLap] = word;
+    state.clues[speaker.id] = list;
+    beep(560, 40);
+    advanceClue();
+  }
+
   function openDiscuss() {
     state.screen = "discuss";
-    state.discussLeft = 45;
+    state.discussLeft = 40;
     draw();
   }
 
@@ -308,6 +360,29 @@
     draw();
   }
 
+  function recap() {
+    var lines = players().map(function (p) {
+      var mark = state.imposterIds.indexOf(p.id) !== -1 ? "  ← imposter" : "";
+      return p.name + ": " + (slipText(p.id) || "—") + mark;
+    });
+    lines.unshift("Imposter Game");
+    lines.push("Word: " + state.secret);
+    if (state.cousin) lines.push("Lookalike: " + state.cousin);
+    return lines.join("\n");
+  }
+
+  function copyRecap() {
+    var text = recap();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        var btn = document.getElementById("copy");
+        if (btn) btn.textContent = "Copied";
+      }).catch(function () { window.prompt("Copy the round", text); });
+      return;
+    }
+    window.prompt("Copy the round", text);
+  }
+
   function bindHold(node) {
     var shown = false;
     function show(event) {
@@ -320,10 +395,9 @@
       state.seen = true;
       node.classList.add("is-open");
       var face = node.querySelector("[data-face]");
-      var player = currentPassPlayer();
-      var card = cardFor(player);
+      var card = cardFor(currentPassPlayer());
       if (card.kind === "imposter") {
-        face.innerHTML = '<span class="seal">Imposter</span><b>You do not know the word.</b><small>Listen, then blend in.</small>';
+        face.innerHTML = '<span class="seal">Imposter</span><b>You do not know the word.</b><small>Read the table. Write something that fits.</small>';
       } else {
         face.innerHTML = "<small>Your word</small><b>" + escapeHtml(card.word) + "</b>";
       }
@@ -334,8 +408,7 @@
       if (!shown) return;
       shown = false;
       node.classList.remove("is-open");
-      var face = node.querySelector("[data-face]");
-      face.innerHTML = "<small>Press and hold</small><b>Show my card</b>";
+      node.querySelector("[data-face]").innerHTML = "<small>Press and hold</small><b>Show my card</b>";
       holdPointer = null;
       markPassReady();
     }
@@ -343,9 +416,9 @@
       event.preventDefault();
       show(event);
     });
-    node.addEventListener("pointerup", hide);
-    node.addEventListener("pointercancel", hide);
-    node.addEventListener("lostpointercapture", hide);
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (type) {
+      node.addEventListener(type, hide);
+    });
     node.addEventListener("contextmenu", function (event) { event.preventDefault(); });
     node.addEventListener("keydown", function (event) {
       if (event.key !== " " && event.key !== "Enter") return;
@@ -357,43 +430,54 @@
     });
   }
 
+  function evidenceList(asButtons) {
+    return orderFrom(state.startOffset).map(function (p) {
+      var burned = state.screen === "result" && state.imposterIds.indexOf(p.id) !== -1;
+      var text = slipText(p.id) || "—";
+      if (asButtons) {
+        return '<button type="button" class="evidence" data-vote="' + p.id + '"><span>' + escapeHtml(p.name) + "</span><b>" + escapeHtml(text) + "</b></button>";
+      }
+      return '<div class="evidence' + (burned ? " burned" : "") + '"><span>' + escapeHtml(p.name) + "</span><b>" + escapeHtml(text) + "</b></div>";
+    }).join("");
+  }
+
+  function chrome(label) {
+    return '<div class="chrome"><button type="button" class="texty" id="quit">End</button><span>' + escapeHtml(label) + '</span><button type="button" class="texty" id="mute-play">' + (state.muted ? "Muted" : "Sound") + "</button></div>";
+  }
+
   function renderSetup() {
-    var cats = ["mixed"].concat(Object.keys(pack.categories));
-    var labels = {
-      mixed: "Mixed", food: "Food", animals: "Animals", places: "Places", home: "Home",
-      nature: "Nature", jobs: "Jobs", sports: "Sports", school: "School", clothes: "Clothes"
-    };
-    var chips = cats.map(function (cat) {
-      return '<button type="button" class="chip' + (state.category === cat ? " is-on" : "") + '" data-cat="' + cat + '">' + labels[cat] + "</button>";
+    var deckButtons = decks.map(function (deck) {
+      return '<button type="button" class="deck' + (state.category === deck.id ? " is-on" : "") + '" data-cat="' + deck.id + '" style="--stripe:' + deck.stripe + '">' + deck.label + "</button>";
     }).join("");
     var nameFields = "";
     for (var i = 0; i < state.playerCount; i++) {
-      nameFields += '<label>Player ' + (i + 1) + '<input maxlength="16" data-name="' + i + '" value="' + escapeHtml(state.names[i] || "") + '" placeholder="Player ' + (i + 1) + '"></label>';
+      nameFields += '<label>Seat ' + (i + 1) + '<input maxlength="16" data-name="' + i + '" value="' + escapeHtml(state.names[i] || "") + '" placeholder="Player ' + (i + 1) + '"></label>';
     }
     app.innerHTML =
       '<section class="stage setup">' +
-        '<p class="lede">Pass one phone. One player does not know the word.</p>' +
+        tableHtml("", '<button type="button" class="deal" id="start">Deal</button>') +
+        '<p class="hint">Write the clues on the phone. They stay on the table. Vote for the slip that does not belong.</p>' +
         '<div class="steppers">' +
-          '<div class="stepper"><span>Players</span><button type="button" data-step="players" data-dir="-1" aria-label="Fewer players">−</button><strong>' + state.playerCount + '</strong><button type="button" data-step="players" data-dir="1" aria-label="More players">+</button></div>' +
+          '<div class="stepper"><span>Seats</span><button type="button" data-step="players" data-dir="-1" aria-label="Fewer players">−</button><strong>' + state.playerCount + '</strong><button type="button" data-step="players" data-dir="1" aria-label="More players">+</button></div>' +
           '<div class="stepper"><span>Imposters</span><button type="button" data-step="imposters" data-dir="-1" aria-label="Fewer imposters">−</button><strong>' + state.imposterCount + '</strong><button type="button" data-step="imposters" data-dir="1" aria-label="More imposters">+</button></div>' +
         "</div>" +
-        '<div class="chip-row" role="group" aria-label="Word category">' + chips + "</div>" +
-        '<div class="seg" role="group" aria-label="How the imposter sees a card">' +
-          '<button type="button" data-mode="classic" class="' + (state.mode === "classic" ? "is-on" : "") + '">Classic</button>' +
+        '<div class="decks" role="group" aria-label="Word deck">' + deckButtons + "</div>" +
+        '<div class="seg" role="group" aria-label="Imposter card">' +
+          '<button type="button" data-mode="classic" class="' + (state.mode === "classic" ? "is-on" : "") + '">Blank card</button>' +
           '<button type="button" data-mode="cousin" class="' + (state.mode === "cousin" ? "is-on" : "") + '">Lookalike</button>' +
         "</div>" +
         '<p class="hint">' + (state.mode === "classic"
-          ? "The imposter sees a blank role. Everyone else sees the same word."
-          : "The imposter gets a cousin of the word, and is not told.") + "</p>" +
-        '<details class="names"><summary>Add names</summary><div class="name-grid">' + nameFields + "</div></details>" +
-        '<details class="rules"><summary>Rules</summary><ol>' +
-          "<li>Hand the phone around. Press and hold to see your card, then let go.</li>" +
-          "<li>Each player says one word about the secret. Do that twice.</li>" +
-          "<li>Vote in secret. The group wins only if one imposter has the most votes alone.</li>" +
+          ? "The imposter sees a blank role and has to write into everyone else's trail."
+          : "The imposter gets a cousin of the word and is not told. The slip gives them away.") + "</p>" +
+        '<button type="button" class="btn ghost" id="voice">' + (state.voice ? "Clues are spoken" : "Clues are written") + "</button>" +
+        '<details class="names"><summary>Name the seats</summary><div class="name-grid">' + nameFields + "</div></details>" +
+        '<details class="rules"><summary>How a round goes</summary><ol>' +
+          "<li>Pass the phone. Press and hold, read, let go.</li>" +
+          "<li>Two laps. Each person pins one word to the table.</li>" +
+          "<li>Read the trail. Vote for the slip that doesn't fit.</li>" +
           "<li>A caught imposter gets one guess to steal the round.</li>" +
         "</ol></details>" +
-        '<button type="button" class="btn primary" id="start">Start the round</button>' +
-        '<button type="button" class="btn ghost icon-mute" id="mute">' + (state.muted ? "Sound off" : "Sound on") + "</button>" +
+        '<button type="button" class="btn ghost" id="mute">' + (state.muted ? "Sound off" : "Sound on") + "</button>" +
       "</section>";
 
     app.querySelectorAll("[data-step]").forEach(function (btn) {
@@ -426,11 +510,19 @@
     });
     app.querySelectorAll("[data-name]").forEach(function (input) {
       input.addEventListener("input", function () {
-        state.names[Number(input.getAttribute("data-name"))] = input.value;
+        var index = Number(input.getAttribute("data-name"));
+        state.names[index] = input.value;
+        var seat = app.querySelector('.seat[data-i="' + index + '"] .seat-name');
+        if (seat) seat.textContent = input.value.trim() || ("Player " + (index + 1));
         saveSettings();
       });
     });
     document.getElementById("start").addEventListener("click", startRound);
+    document.getElementById("voice").addEventListener("click", function () {
+      state.voice = !state.voice;
+      saveSettings();
+      draw();
+    });
     document.getElementById("mute").addEventListener("click", function () {
       state.muted = !state.muted;
       saveSettings();
@@ -443,9 +535,9 @@
     app.innerHTML =
       '<section class="stage play">' +
         chrome("Card " + (state.passIndex + 1) + " of " + state.playerCount) +
+        tableHtml(player.id, "") +
         '<p class="kicker">Hand the phone to</p>' +
         '<h2 class="who">' + escapeHtml(player.name) + "</h2>" +
-        '<p class="hint">Everyone else, look away. Press and hold. Let go before you pass it on.</p>' +
         '<div class="hold" id="hold" role="button" tabindex="0" aria-label="Press and hold to see your card">' +
           '<div class="paper" data-face><small>Press and hold</small><b>Show my card</b></div>' +
         "</div>" +
@@ -459,33 +551,44 @@
   }
 
   function renderClue() {
-    var order = orderFrom(state.startOffset);
-    var speaker = order[state.clueStep];
-    var rows = order.map(function (p, i) {
-      return '<li class="' + (i === state.clueStep ? "is-now" : "") + '">' + escapeHtml(p.name) + "</li>";
-    }).join("");
+    var speaker = orderFrom(state.startOffset)[state.clueStep];
+    var second = state.clueLap === 1;
+    var field = state.voice
+      ? '<button type="button" class="btn primary" id="said">Said it</button>'
+      : '<form id="clue-form" class="clue-form"><label class="sr" for="clue-input">One word</label><input id="clue-input" maxlength="22" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="' + (second ? "Narrow it" : "One word") + '"><button type="submit" class="btn primary">Pin it to the table</button></form>';
     app.innerHTML =
       '<section class="stage play">' +
-        chrome("Clues · pass " + (state.clueLap + 1) + " of 2") +
-        '<p class="kicker">Say one word</p>' +
+        chrome("Trail · pass " + (state.clueLap + 1) + " of 2") +
+        tableHtml(speaker.id, "") +
+        '<p class="kicker">' + (second ? "Second word" : "First word") + "</p>" +
         '<h2 class="who">' + escapeHtml(speaker.name) + "</h2>" +
-        '<p class="hint">Out loud. Related, not a definition. Do not say the word, and do not say the category.</p>' +
-        '<ol class="order">' + rows + "</ol>" +
-        '<button type="button" class="btn primary" id="said">Said it</button>' +
-        '<button type="button" class="btn ghost" id="to-talk">End clues and talk</button>' +
+        '<p class="hint">' + (state.voice
+          ? "Say one word out loud. Do not say the secret, and do not name the deck."
+          : "Type one word. It stays on the felt. Do not write the secret.") + "</p>" +
+        field +
       "</section>";
-    document.getElementById("said").addEventListener("click", advanceClue);
-    document.getElementById("to-talk").addEventListener("click", openDiscuss);
+    if (state.voice) {
+      document.getElementById("said").addEventListener("click", function () { pinClue(""); });
+    } else {
+      var form = document.getElementById("clue-form");
+      var input = document.getElementById("clue-input");
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        pinClue(input.value);
+      });
+      input.focus();
+    }
   }
 
   function renderDiscuss() {
     app.innerHTML =
       '<section class="stage play">' +
-        chrome("Talk") +
+        chrome("Read the trail") +
         '<p class="kicker" id="discuss-count">' + state.discussLeft + "</p>" +
-        '<h2 class="who">Who felt off?</h2>' +
-        '<p class="hint">The imposter should argue too. Pointing comes after the talk, not during it.</p>' +
-        '<button type="button" class="btn primary" id="to-vote">Vote in secret</button>' +
+        '<h2 class="who">Which slip is off?</h2>' +
+        '<p class="hint">The words are the evidence. The imposter should argue too.</p>' +
+        evidenceList(false) +
+        '<button type="button" class="btn primary" id="to-vote">Vote on a slip</button>' +
       "</section>";
     document.getElementById("to-vote").addEventListener("click", openBallot);
   }
@@ -493,16 +596,13 @@
   function renderBallot() {
     var voter = players()[state.ballotIndex];
     if (!state.ballotSeen) {
-      var choices = players().map(function (p) {
-        return '<button type="button" class="vote" data-vote="' + p.id + '">' + escapeHtml(p.name) + "</button>";
-      }).join("");
       app.innerHTML =
         '<section class="stage play">' +
           chrome("Vote " + (state.ballotIndex + 1) + " of " + state.playerCount) +
           '<p class="kicker">Hand the phone to</p>' +
           '<h2 class="who">' + escapeHtml(voter.name) + "</h2>" +
-          '<p class="hint">Tap one name. You can tap yourself. The choice disappears before the phone moves on.</p>' +
-          '<div class="vote-list">' + choices + "</div>" +
+          '<p class="hint">Tap the slip that does not belong. The choice locks before the phone moves on.</p>' +
+          evidenceList(true) +
         "</section>";
       app.querySelectorAll("[data-vote]").forEach(function (btn) {
         btn.addEventListener("click", function () { castVote(btn.getAttribute("data-vote")); });
@@ -515,24 +615,19 @@
         chrome("Vote locked") +
         '<h2 class="who">Locked.</h2>' +
         '<p class="hint">Pass the phone before the next person looks.</p>' +
-        '<button type="button" class="btn primary" id="ballot-next">' + (last ? "Show the result" : "Next voter") + "</button>" +
+        '<button type="button" class="btn primary" id="ballot-next">' + (last ? "Open the poster" : "Next voter") + "</button>" +
       "</section>";
     document.getElementById("ballot-next").addEventListener("click", finishBallot);
   }
 
   function renderSteal() {
-    var caughtId = state.leaders[0];
     app.innerHTML =
       '<section class="stage play">' +
         chrome("One guess") +
-        '<p class="kicker">Caught</p>' +
-        '<h2 class="who">' + escapeHtml(nameOf(caughtId)) + "</h2>" +
-        '<p class="hint">Hand the phone to the caught imposter. One guess at the word steals the round. A wrong guess gives the round to the group.</p>' +
-        '<form id="steal-form" class="steal">' +
-          '<label class="sr" for="steal-input">Guess the word</label>' +
-          '<input id="steal-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the word">' +
-          '<button type="submit" class="btn primary">Guess</button>' +
-        "</form>" +
+        '<p class="kicker">The table pointed at</p>' +
+        '<h2 class="who">' + escapeHtml(nameOf(state.leaders[0])) + "</h2>" +
+        '<p class="hint">Hand them the phone. One right guess steals the round.</p>' +
+        '<form id="steal-form" class="steal"><label class="sr" for="steal-input">Guess the word</label><input id="steal-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="The word"><button type="submit" class="btn primary">Guess</button></form>' +
         '<button type="button" class="btn ghost" id="no-steal">Take the loss</button>' +
       "</section>";
     document.getElementById("steal-form").addEventListener("submit", function (event) {
@@ -549,59 +644,49 @@
   }
 
   function renderResult() {
-    var result = engine.tally(state.votes);
-    var bars = players().map(function (p) {
-      var count = result.counts[p.id] || 0;
-      var width = result.top ? Math.round((count / state.playerCount) * 100) : 0;
-      return '<div class="bar-row"><span>' + escapeHtml(p.name) + '</span><span class="track"><span style="width:' + width + '%"></span></span><b>' + count + "</b></div>";
-    }).join("");
     var stolen = state.steal && engine.guessHits(state.steal, state.secret);
-    var headline;
-    var detail;
+    var headline = "Wrong slip.";
+    var detail = escapeHtml(nameOf(state.leaders[0] || "")) + " knew the word.";
     if (stolen) {
       headline = "Stolen.";
-      detail = escapeHtml(nameOf(state.leaders[0])) + " named the word and took the round.";
+      detail = escapeHtml(nameOf(state.leaders[0])) + " named it.";
     } else if (state.caught) {
-      headline = "The group got them.";
-      detail = escapeHtml(nameOf(state.leaders[0])) + " was an imposter.";
+      headline = "That slip was the one.";
+      detail = escapeHtml(nameOf(state.leaders[0])) + " was the imposter.";
     } else if (state.leaders.length !== 1) {
       headline = "The table split.";
-      detail = "No single person had the most votes. The imposter slips away.";
-    } else {
-      headline = "Wrong person.";
-      detail = escapeHtml(nameOf(state.leaders[0])) + " knew the word.";
+      detail = "No single slip won. The imposter stays in.";
     }
     var wordLine = state.mode === "cousin"
       ? "The table had <b>" + escapeHtml(state.secret) + "</b>. The lookalike was <b>" + escapeHtml(state.cousin) + "</b>."
       : "The word was <b>" + escapeHtml(state.secret) + "</b>.";
-    var who = state.imposterIds.map(nameOf).join(", ");
-    var scores = "<li><span>Table</span><b>" + state.tableWins + "</b></li><li><span>Imposters</span><b>" + state.imposterWins + "</b></li>";
     app.innerHTML =
       '<section class="stage play">' +
         chrome("Round " + state.round) +
-        '<p class="kicker">Result</p>' +
-        '<h2 class="who">' + headline + "</h2>" +
-        '<p class="hint">' + detail + "</p>" +
-        '<p class="word-line">' + wordLine + "</p>" +
-        '<p class="hint">Imposter' + (state.imposterIds.length > 1 ? "s" : "") + ": " + escapeHtml(who) + ".</p>" +
-        '<div class="bars">' + bars + "</div>" +
-        '<ul class="scores">' + scores + "</ul>" +
+        tableHtml("", "") +
+        '<article class="poster">' +
+          '<p class="kicker">The poster</p>' +
+          '<h2 class="who">' + headline + "</h2>" +
+          '<p class="hint">' + detail + "</p>" +
+          '<p class="word-line">' + wordLine + "</p>" +
+          evidenceList(false) +
+          '<div class="scoreline"><span>Table</span><b>' + state.tableWins + "</b></div>" +
+          '<div class="scoreline"><span>Imposters</span><b>' + state.imposterWins + "</b></div>" +
+        "</article>" +
         '<button type="button" class="btn primary" id="next">Next round</button>' +
+        '<button type="button" class="btn ghost" id="copy">Copy the round</button>' +
         '<button type="button" class="btn ghost" id="table">New table</button>' +
       "</section>";
     document.getElementById("next").addEventListener("click", nextRound);
+    document.getElementById("copy").addEventListener("click", copyRecap);
     document.getElementById("table").addEventListener("click", newTable);
-  }
-
-  function chrome(label) {
-    return '<div class="chrome"><button type="button" class="texty" id="quit">End</button><span>' + escapeHtml(label) + '</span><button type="button" class="texty" id="mute-play">' + (state.muted ? "Muted" : "Sound") + "</button></div>";
   }
 
   function bindChrome() {
     var quit = document.getElementById("quit");
     var mute = document.getElementById("mute-play");
     if (quit) quit.addEventListener("click", function () {
-      if (window.confirm("Leave this round? Scores stay until you start a new table.")) backToSetup();
+      if (window.confirm("Leave this round? The score stays until you start a new table.")) backToSetup();
     });
     if (mute) mute.addEventListener("click", function () {
       state.muted = !state.muted;
@@ -626,8 +711,7 @@
           if (state.discussLeft <= 0) clearTimer();
         }, 1000);
       }
-    }
-    else if (state.screen === "ballot") renderBallot();
+    } else if (state.screen === "ballot") renderBallot();
     else if (state.screen === "steal") renderSteal();
     else if (state.screen === "result") renderResult();
     bindChrome();
