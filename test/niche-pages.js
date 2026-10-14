@@ -124,6 +124,47 @@ pages.forEach(function (page) {
     assert.ok(list.indexOf(word) !== -1, page.url + " cites " + word + " which " + deck + " cannot deal");
   });
 });
+const packWords = [];
+Object.keys(pack.categories).forEach(function (cat) {
+  pack.categories[cat].forEach(function (word) { packWords.push(word.toLowerCase()); });
+});
+packWords.sort(function (a, b) { return b.length - a.length; });
+
+const faqAnswers = new Map();
+pages.forEach(function (page) {
+  const raw = (page.html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/) || [])[1];
+  if (!raw) return;
+  const data = JSON.parse(raw);
+  if (!data.mainEntity) return;
+  const article = (page.html.match(/<article[\s\S]*?<\/article>/) || [""])[0];
+  const blocks = article.match(/<details>[\s\S]*?<\/details>/g) || [];
+  const visible = blocks.map(function (block) {
+    return {
+      q: ((block.match(/<summary>([\s\S]*?)<\/summary>/) || [])[1] || "").trim(),
+      a: ((block.match(/<p>([\s\S]*?)<\/p>/) || [])[1] || "").replace(/<[^>]+>/g, "").trim()
+    };
+  });
+  assert.strictEqual(visible.length, data.mainEntity.length, "faq count " + page.url);
+  data.mainEntity.forEach(function (item, index) {
+    assert.strictEqual(visible[index].q, item.name, "faq question " + page.url);
+    assert.strictEqual(visible[index].a, item.acceptedAnswer.text, "faq answer " + page.url);
+    const key = item.name + " " + item.acceptedAnswer.text;
+    if (!faqAnswers.has(key)) faqAnswers.set(key, []);
+    faqAnswers.get(key).push(page.url);
+  });
+  const deck = (page.html.match(/data-deck="([^"]+)"/) || [])[1];
+  if (!deck || deck === "mixed") return;
+  const allowed = new Set((pack.categories[deck] || []).map(function (word) { return word.toLowerCase(); }));
+  const answerText = data.mainEntity.map(function (item) { return item.acceptedAnswer.text; }).join(" ").toLowerCase();
+  packWords.forEach(function (word) {
+    const re = new RegExp("(^|[^a-z])" + word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^a-z]|$)");
+    if (re.test(answerText)) assert.ok(allowed.has(word), page.url + " faq cites " + word + " outside " + deck);
+  });
+});
+for (const [key, where] of faqAnswers) {
+  assert.strictEqual(where.length, 1, "duplicated faq " + where.join(", ") + ": " + key.slice(0, 80));
+}
+
 assert.ok(citedWords(need("/decks/screen/").html).length >= 4, "screen examples");
 assert.ok(citedWords(need("/decks/play/").html).length >= 4, "sports examples");
 assert.strictEqual((need("/decks/screen/").html.match(/data-deck="screen"/) || []).length, 1);
