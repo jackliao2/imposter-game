@@ -1,0 +1,12 @@
+{
+  "name": "Imposter Game",
+  "short_name": "Imposter",
+  "description": "Pass one phone. Find the player who does not know the word.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#16120e",
+  "theme_color": "#16120e",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
