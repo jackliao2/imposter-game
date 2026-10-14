@@ -165,8 +165,8 @@
     var list = players();
     return list.map(function (p, i) {
       var angle = (-90 + (i * 360) / list.length) * Math.PI / 180;
-      var x = 50 + Math.cos(angle) * 46;
-      var y = 46 + Math.sin(angle) * 40;
+      var x = 50 + Math.cos(angle) * 40;
+      var y = 48 + Math.sin(angle) * 36;
       var text = slipText(p.id);
       var burned = state.screen === "result" && state.imposterIds.indexOf(p.id) !== -1;
       var slip = text ? '<div class="slip' + (burned ? " burned" : "") + '">' + escapeHtml(text) + "</div>" : "";

@@ -41,7 +41,7 @@
 
 * { box-sizing: border-box; }
 
-html, body { margin: 0; }
+html, body { margin: 0; max-width: 100%; overflow-x: hidden; }
 
 body {
   min-height: 100dvh;
@@ -70,9 +70,9 @@ button, input { font: inherit; color: inherit; }
 .skip:focus { top: 12px; }
 
 .mast {
-  width: min(460px, calc(100% - 28px));
+  width: min(440px, 100%);
   margin: 0 auto;
-  padding: calc(18px + env(safe-area-inset-top)) 0 0;
+  padding: calc(18px + env(safe-area-inset-top)) 16px 0;
 }
 
 .eyebrow {
@@ -92,7 +92,7 @@ h1 {
   line-height: 0.9;
 }
 
-#app { width: min(460px, calc(100% - 28px)); margin: 0 auto; }
+#app { width: min(440px, 100%); margin: 0 auto; padding: 0 16px; }
 
 body.playing #app {
   position: fixed;
@@ -113,7 +113,7 @@ body.playing .mast { display: none; }
 }
 
 body.playing .stage {
-  width: min(460px, calc(100% - 28px));
+  width: min(440px, 100%);
   margin: 0 auto;
   min-height: 100dvh;
   display: flex;
@@ -125,6 +125,7 @@ body.playing .stage {
   position: relative;
   height: 292px;
   margin: 8px 0 12px;
+  max-width: 100%;
 }
 
 .oval {
@@ -160,7 +161,7 @@ body.playing .stage {
 .seat {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 76px;
+  width: 68px;
   text-align: center;
   z-index: 3;
   background: transparent;
@@ -262,6 +263,9 @@ body.playing .stage {
 .decks {
   display: flex;
   gap: 8px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   padding: 12px 0 4px;
   scrollbar-width: none;
@@ -290,7 +294,9 @@ body.playing .stage {
   border-color: var(--paper);
 }
 
-.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; min-width: 0; }
+
+.seg button { min-width: 0; }
 
 details { border-top: 1px solid var(--line); padding: 8px 0; }
 
