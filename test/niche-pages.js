@@ -106,6 +106,32 @@ assert.ok(compare.text.indexOf("spoken") !== -1, "spoken pattern");
 assert.ok(compare.text.indexOf("room code") !== -1, "room code pattern");
 assert.ok(compare.text.indexOf("no room code") !== -1, "refuses room codes");
 
+function articleSentences(html) {
+  const article = (html.match(/<article[\s\S]*?<\/article>/) || [""])[0];
+  const text = article.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return text.split(/(?<=\.)\s+/).map(function (sentence) { return sentence.trim(); }).filter(Boolean);
+}
+function statesDifference(sentence) {
+  const s = sentence.toLowerCase();
+  const written = /written clues/.test(s) && /remain|readable|standing|view|pinned|posted|visible/.test(s);
+  const vote = /vote|voting|ballot|voter/.test(s) && /slip/.test(s);
+  const steal = /one guess/.test(s) && /steal/.test(s);
+  return written && vote && steal;
+}
+const differenceSentences = new Map();
+pages.forEach(function (page) {
+  articleSentences(page.html).filter(statesDifference).forEach(function (sentence) {
+    if (!differenceSentences.has(sentence)) differenceSentences.set(sentence, []);
+    differenceSentences.get(sentence).push(page.url);
+  });
+});
+pages.forEach(function (page) {
+  const own = articleSentences(page.html).filter(statesDifference).filter(function (sentence) {
+    return differenceSentences.get(sentence).length === 1;
+  });
+  assert.ok(own.length >= 1, page.url + " has no unique sentence that keeps two written clues up, votes a slip, and lets one guess steal the round");
+});
+
 const home = need("/");
 assert.ok(!/data-voice="spoken"/.test(home.html), "home must not default to spoken");
 const gameJs = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
