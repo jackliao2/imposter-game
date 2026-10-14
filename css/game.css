@@ -70,7 +70,8 @@ button, input { font: inherit; color: inherit; }
 .skip:focus { top: 12px; }
 
 .mast {
-  width: min(440px, 100%);
+  width: auto;
+  max-width: 440px;
   margin: 0 auto;
   padding: calc(18px + env(safe-area-inset-top)) 16px 0;
 }
@@ -87,12 +88,12 @@ h1 {
   margin: 4px 0 0;
   font-family: var(--serif);
   font-weight: 600;
-  font-size: clamp(2.6rem, 10vw, 3.6rem);
+  font-size: clamp(2rem, 8vw, 2.7rem);
   letter-spacing: -0.04em;
   line-height: 0.9;
 }
 
-#app { width: min(440px, 100%); margin: 0 auto; padding: 0 16px; }
+#app { width: auto; max-width: 440px; margin: 0 auto; padding: 0 16px; }
 
 body.playing #app {
   position: fixed;
@@ -113,7 +114,8 @@ body.playing .mast { display: none; }
 }
 
 body.playing .stage {
-  width: min(440px, 100%);
+  width: auto;
+  max-width: 440px;
   margin: 0 auto;
   min-height: 100dvh;
   display: flex;
@@ -448,8 +450,10 @@ summary { cursor: pointer; }
 .play .btn.primary { margin-top: 12px; }
 
 .read {
-  width: min(68ch, calc(100% - 36px));
+  width: auto;
+  max-width: 68ch;
   margin: 12px auto 64px;
+  padding: 0 18px;
   color: #efe4d4;
 }
 
