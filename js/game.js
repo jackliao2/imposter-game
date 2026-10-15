@@ -484,6 +484,14 @@
     var deckOn = app.querySelector(".deck.is-on");
     if (deckRow && deckOn) {
       var view = deckRow.clientWidth;
+      var pad = deckRow.querySelector("[data-deck-pad]");
+      if (!pad) {
+        pad = document.createElement("span");
+        pad.setAttribute("data-deck-pad", "");
+        pad.setAttribute("aria-hidden", "true");
+        deckRow.appendChild(pad);
+      }
+      pad.style.flex = "0 0 " + Math.max(0, view - deckOn.offsetWidth) + "px";
       var end = deckOn.offsetLeft + deckOn.offsetWidth;
       var start = deckOn.offsetLeft;
       var chip = deckOn.previousElementSibling;
@@ -492,8 +500,7 @@
         else break;
         chip = chip.previousElementSibling;
       }
-      var max = Math.max(0, deckRow.scrollWidth - view);
-      deckRow.scrollLeft = Math.max(0, Math.min(max, start));
+      deckRow.scrollLeft = start;
     }
 
     app.querySelectorAll("[data-step]").forEach(function (btn) {
