@@ -130,21 +130,21 @@ body.playing .stage {
   position: absolute;
   inset: 28px 6px 16px;
   border-radius: 50%;
-  background: #1c1612;
+  background: #2c241c;
   box-shadow: 0 22px 36px rgba(0, 0, 0, 0.38);
 }
 
 .oval::before {
   content: "";
   position: absolute;
-  inset: 8px;
+  inset: 10px;
   border-radius: 50%;
   background:
-    radial-gradient(ellipse at 50% 36%, rgba(255, 248, 232, 0.16), transparent 42%),
-    radial-gradient(ellipse at 50% 62%, #2d6b54 0%, var(--felt) 52%, var(--felt-deep) 100%);
+    radial-gradient(ellipse at 50% 32%, rgba(255, 248, 232, 0.28), transparent 38%),
+    radial-gradient(ellipse at 50% 70%, #16382e 0%, #1e5644 46%, #0d2820 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(246, 240, 230, 0.42),
-    inset 0 18px 30px rgba(0, 0, 0, 0.22);
+    inset 0 0 0 1px rgba(246, 240, 230, 0.5),
+    inset 0 20px 36px rgba(0, 0, 0, 0.28);
 }
 
 .oval::after { content: none; }
@@ -180,7 +180,8 @@ body.playing .stage {
   font-size: 0.64rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(246, 240, 230, 0.62);
+  color: #f6f0e6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
 }
 
 .seat.is-now .seat-name { color: #fff8ee; }
