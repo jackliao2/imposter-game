@@ -480,6 +480,11 @@
         "</ol></details>" +
         '<button type="button" class="btn ghost" id="mute">' + (state.muted ? "Sound off" : "Sound on") + "</button>" +
       "</section>";
+    var deckRow = app.querySelector(".decks");
+    var deckOn = app.querySelector(".deck.is-on");
+    if (deckRow && deckOn) {
+      deckRow.scrollLeft = Math.max(0, deckOn.offsetLeft - (deckRow.clientWidth - deckOn.offsetWidth) / 2);
+    }
 
     app.querySelectorAll("[data-step]").forEach(function (btn) {
       btn.addEventListener("click", function () {
