@@ -135,19 +135,42 @@ body.playing .stage {
   inset: 28px 6px 16px;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 42%, #2a7a58 0%, var(--felt) 42%, var(--felt-deep) 78%);
+    linear-gradient(118deg, rgba(255, 220, 170, 0.34), transparent 32%),
+    repeating-linear-gradient(102deg, rgba(255, 214, 160, 0.09) 0 1px, transparent 1px 6px),
+    linear-gradient(165deg, #b07542 0%, #5c341c 36%, #2c1810 64%, #7a4a28 100%);
   box-shadow:
-    inset 0 0 0 8px var(--wood),
-    inset 0 0 0 12px var(--wood-dark),
-    0 18px 28px rgba(0, 0, 0, 0.35);
+    0 1px 0 rgba(255, 224, 186, 0.4),
+    0 18px 28px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(32, 16, 8, 0.85);
+}
+
+.oval::before {
+  content: "";
+  position: absolute;
+  inset: 13px;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 26%, rgba(255, 236, 204, 0.22), transparent 34%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse at 50% 48%, #3d9468 0%, var(--felt) 48%, #0e3326 82%);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(228, 196, 138, 0.9),
+    inset 0 0 0 6px rgba(28, 14, 8, 0.38),
+    inset 0 16px 26px rgba(0, 0, 0, 0.28);
 }
 
 .oval::after {
   content: "";
   position: absolute;
-  inset: 14px;
-  border-radius: 50%;
-  border: 1px dashed rgba(228, 196, 138, 0.28);
+  left: 50%;
+  top: 47%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(228, 196, 138, 0.75);
+  box-shadow: 0 0 0 4px rgba(14, 40, 30, 0.28);
+  z-index: 1;
 }
 
 .hub {
@@ -172,26 +195,38 @@ body.playing .stage {
 }
 
 .seat-name {
-  display: block;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
+  display: inline-block;
+  max-width: 74px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 6px 1px;
+  border-radius: 999px;
+  background: rgba(16, 10, 7, 0.82);
+  border: 1px solid rgba(228, 196, 138, 0.6);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--brass);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   margin-bottom: 3px;
 }
 
-.seat.is-now .seat-name { color: white; }
+.seat.is-now .seat-name {
+  color: var(--ink);
+  background: var(--paper);
+  border-color: var(--paper);
+}
 
 .slip {
   background: var(--paper);
   color: var(--ink);
   border-radius: 2px 2px 7px 7px;
+  border-top: 2px solid var(--wax);
   padding: 4px 5px 5px;
   font-family: var(--serif);
   font-size: 0.72rem;
   line-height: 1.15;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.22);
   transform: rotate(-2deg);
 }
 
@@ -201,18 +236,26 @@ body.playing .stage {
 
 .deal {
   width: 100%;
-  border: 0;
-  border-radius: 16px;
+  border: 1px solid #f7f1e6;
+  border-radius: 14px;
   padding: 18px 10px;
-  background: var(--paper);
+  background: linear-gradient(180deg, #fffaf3 0%, var(--paper) 58%, #e4d5c0 100%);
   color: var(--ink);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  box-shadow: 0 10px 0 #b9ad9b;
+  box-shadow:
+    inset 0 0 0 1px rgba(156, 47, 44, 0.4),
+    0 8px 0 #a89884,
+    0 14px 16px rgba(0, 0, 0, 0.28);
 }
 
-.deal:active { transform: translateY(2px); box-shadow: 0 8px 0 #b9ad9b; }
+.deal:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 0 0 1px rgba(156, 47, 44, 0.4),
+    0 6px 0 #a89884;
+}
 
 .kicker {
   margin: 0;
