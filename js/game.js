@@ -480,31 +480,6 @@
         "</ol></details>" +
         '<button type="button" class="btn ghost" id="mute">' + (state.muted ? "Sound off" : "Sound on") + "</button>" +
       "</section>";
-    var deckRow = app.querySelector(".decks");
-    var deckOn = app.querySelector(".deck.is-on");
-    if (deckRow && deckOn) {
-      var view = deckRow.clientWidth;
-      var pad = deckRow.querySelector("[data-deck-pad]");
-      if (!pad) {
-        pad = document.createElement("span");
-        pad.setAttribute("data-deck-pad", "");
-        pad.setAttribute("aria-hidden", "true");
-        deckRow.appendChild(pad);
-      }
-      pad.style.flex = "0 0 " + Math.max(0, view - deckOn.offsetWidth) + "px";
-      function into(el) {
-        return el.getBoundingClientRect().left - deckRow.getBoundingClientRect().left + deckRow.scrollLeft;
-      }
-      var end = into(deckOn) + deckOn.offsetWidth;
-      var start = into(deckOn);
-      var chip = deckOn.previousElementSibling;
-      while (chip && chip.classList && chip.classList.contains("deck")) {
-        if (end - into(chip) <= view + 1) start = into(chip);
-        else break;
-        chip = chip.previousElementSibling;
-      }
-      deckRow.scrollLeft = start;
-    }
 
     app.querySelectorAll("[data-step]").forEach(function (btn) {
       btn.addEventListener("click", function () {
