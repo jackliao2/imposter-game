@@ -276,7 +276,10 @@ body.playing .stage {
   overflow-x: auto;
   padding: 12px 0 4px;
   scrollbar-width: none;
+  scroll-snap-type: x proximity;
 }
+
+.deck { scroll-snap-align: start; }
 
 .decks::-webkit-scrollbar { display: none; }
 

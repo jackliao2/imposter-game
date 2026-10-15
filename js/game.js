@@ -483,7 +483,17 @@
     var deckRow = app.querySelector(".decks");
     var deckOn = app.querySelector(".deck.is-on");
     if (deckRow && deckOn) {
-      deckRow.scrollLeft = Math.max(0, deckOn.offsetLeft - (deckRow.clientWidth - deckOn.offsetWidth) / 2);
+      var view = deckRow.clientWidth;
+      var end = deckOn.offsetLeft + deckOn.offsetWidth;
+      var start = deckOn.offsetLeft;
+      var chip = deckOn.previousElementSibling;
+      while (chip && chip.classList && chip.classList.contains("deck")) {
+        if (end - chip.offsetLeft <= view) start = chip.offsetLeft;
+        else break;
+        chip = chip.previousElementSibling;
+      }
+      var max = Math.max(0, deckRow.scrollWidth - view);
+      deckRow.scrollLeft = Math.max(0, Math.min(max, start));
     }
 
     app.querySelectorAll("[data-step]").forEach(function (btn) {
