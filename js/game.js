@@ -492,11 +492,14 @@
         deckRow.appendChild(pad);
       }
       pad.style.flex = "0 0 " + Math.max(0, view - deckOn.offsetWidth) + "px";
-      var end = deckOn.offsetLeft + deckOn.offsetWidth;
-      var start = deckOn.offsetLeft;
+      function into(el) {
+        return el.getBoundingClientRect().left - deckRow.getBoundingClientRect().left + deckRow.scrollLeft;
+      }
+      var end = into(deckOn) + deckOn.offsetWidth;
+      var start = into(deckOn);
       var chip = deckOn.previousElementSibling;
       while (chip && chip.classList && chip.classList.contains("deck")) {
-        if (end - chip.offsetLeft <= view) start = chip.offsetLeft;
+        if (end - into(chip) <= view + 1) start = into(chip);
         else break;
         chip = chip.previousElementSibling;
       }
