@@ -6,17 +6,17 @@
   var holdPointer = null;
 
   var decks = [
-    { id: "mixed", label: "The room", stripe: "#e4c48a" },
-    { id: "food", label: "Supper", stripe: "#d07a45" },
-    { id: "animals", label: "Creatures", stripe: "#d2a15a" },
-    { id: "places", label: "Out", stripe: "#3d8f86" },
-    { id: "home", label: "House", stripe: "#c46b6b" },
-    { id: "nature", label: "Weather", stripe: "#7ea2c4" },
-    { id: "jobs", label: "Work", stripe: "#b9a06a" },
-    { id: "sports", label: "Play", stripe: "#6aaa72" },
-    { id: "school", label: "Class", stripe: "#8d7cc4" },
-    { id: "clothes", label: "Closet", stripe: "#c47aa6" },
-    { id: "screen", label: "Screen", stripe: "#d4a017" }
+    { id: "mixed", label: "All", stripe: "#e4c48a" },
+    { id: "food", label: "Food", stripe: "#d07a45" },
+    { id: "animals", label: "Animals", stripe: "#d2a15a" },
+    { id: "places", label: "Places", stripe: "#3d8f86" },
+    { id: "home", label: "Home", stripe: "#c46b6b" },
+    { id: "nature", label: "Nature", stripe: "#7ea2c4" },
+    { id: "jobs", label: "Jobs", stripe: "#b9a06a" },
+    { id: "sports", label: "Sports", stripe: "#6aaa72" },
+    { id: "school", label: "School", stripe: "#8d7cc4" },
+    { id: "clothes", label: "Clothes", stripe: "#c47aa6" },
+    { id: "screen", label: "Movies", stripe: "#d4a017" }
   ];
 
   var state = {
