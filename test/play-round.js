@@ -4,6 +4,19 @@ const assert = require("assert");
 const { JSDOM } = require("jsdom");
 
 const root = path.join(__dirname, "..");
+const engine = require(path.join(root, "js", "engine.js"));
+
+function rules() {
+  const caught = engine.tally({ p1: "imp", p2: "imp", p3: "crew" });
+  assert.strictEqual(engine.crewCaught(caught.leaders, ["imp"]), true, "sole top vote on an imposter");
+  const tied = engine.tally({ p1: "imp", p2: "crew" });
+  assert.strictEqual(tied.leaders.length, 2, "tie has two leaders");
+  assert.strictEqual(engine.crewCaught(tied.leaders, ["imp"]), false, "tie is not a catch");
+  const crew = engine.tally({ p1: "crew", p2: "crew", p3: "imp" });
+  assert.strictEqual(engine.crewCaught(crew.leaders, ["imp"]), false, "sole vote on a non-imposter");
+  assert.strictEqual(engine.guessHits("Fish & Chips", "fish and chips"), true, "normalized guess steals");
+  assert.strictEqual(engine.guessHits("waffle", "fish and chips"), false, "different guess does not steal");
+}
 
 function play() {
   const dom = new JSDOM('<!DOCTYPE html><html><body><main id="app"></main></body></html>', {
@@ -66,5 +79,6 @@ function play() {
   dom.window.close();
 }
 
+rules();
 play();
 console.log("play-round ok");
