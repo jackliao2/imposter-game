@@ -133,6 +133,16 @@ pages.forEach(function (page) {
 });
 
 const home = need("/");
+assert.strictEqual(home.title, "Imposter Game");
+assert.strictEqual(home.h1, "Imposter Game");
+["free", "unblocked", "offline", "impostor", "browser", "game io"].forEach(function (word) {
+  assert.ok(home.description.toLowerCase().indexOf(word) === -1, "home description competes on " + word);
+});
+pages.forEach(function (page) {
+  if (page.url === "/") return;
+  assert.notStrictEqual(page.title, "Imposter Game", page.url + " uses the home title");
+  assert.notStrictEqual(page.h1.toLowerCase(), "imposter game", page.url + " uses the home heading");
+});
 assert.ok(!/data-voice="spoken"/.test(home.html), "home must not default to spoken");
 const gameJs = fs.readFileSync(path.join(root, "js", "game.js"), "utf8");
 assert.ok(/voice:\s*false/.test(gameJs), "written clues are the default");
