@@ -47,7 +47,22 @@
     discussLeft: 45,
     steal: "",
     leaders: [],
-    caught: false
+    caught: false,
+    revotes: 0
+  };
+
+  var samples = {
+    mixed: ["lighthouse", "beach", "spiral"],
+    food: ["waffle", "breakfast", "iron"],
+    animals: ["otter", "river", "belly"],
+    places: ["lighthouse", "beach", "spiral"],
+    home: ["kettle", "tea", "whistle"],
+    nature: ["icicle", "winter", "drip"],
+    jobs: ["locksmith", "keys", "locked out"],
+    sports: ["curling", "ice", "broom"],
+    school: ["protractor", "math", "semicircle"],
+    clothes: ["beret", "hat", "artist"],
+    screen: ["titanic", "ship", "iceberg"]
   };
 
   function rng() {
@@ -67,7 +82,7 @@
       if (saved.playerCount >= 3 && saved.playerCount <= 12) state.playerCount = saved.playerCount;
       state.imposterCount = engine.clampImposters(state.playerCount, saved.imposterCount || 1);
       if (saved.category) state.category = saved.category;
-      if (saved.mode === "cousin" || saved.mode === "classic") state.mode = saved.mode;
+      if (saved.mode === "cousin" || saved.mode === "classic" || saved.mode === "hint") state.mode = saved.mode;
       if (typeof saved.voice === "boolean") state.voice = saved.voice;
       if (Array.isArray(saved.names)) state.names = saved.names;
       if (typeof saved.muted === "boolean") state.muted = saved.muted;
@@ -212,6 +227,7 @@
     state.steal = "";
     state.leaders = [];
     state.caught = false;
+    state.revotes = 0;
     state.screen = "pass";
     document.body.classList.add("playing");
     beep(520, 70);
@@ -225,6 +241,7 @@
   function cardFor(player) {
     var isImpostor = state.imposterIds.indexOf(player.id) !== -1;
     if (state.mode === "cousin") return { kind: "word", word: isImpostor ? state.cousin : state.secret };
+    if (isImpostor && state.mode === "hint") return { kind: "hint" };
     if (isImpostor) return { kind: "imposter" };
     return { kind: "word", word: state.secret };
   }
@@ -314,6 +331,13 @@
   function revealVote() {
     var result = engine.tally(state.votes);
     state.leaders = result.leaders;
+    if (result.leaders.length !== 1 && state.revotes < 1) {
+      state.revotes += 1;
+      state.screen = "revote";
+      beep(300, 80);
+      draw();
+      return;
+    }
     state.caught = engine.crewCaught(result.leaders, state.imposterIds);
     state.screen = state.caught ? "steal" : "result";
     if (!state.caught) award();
@@ -369,6 +393,10 @@
     lines.unshift("Imposter Game");
     lines.push("Word: " + state.secret);
     if (state.cousin) lines.push("Lookalike: " + state.cousin);
+    players().forEach(function (p) {
+      var target = state.votes[p.id];
+      lines.push(p.name + " voted " + (target ? nameOf(target) : "—"));
+    });
     return lines.join("\n");
   }
 
@@ -397,7 +425,11 @@
       node.classList.add("is-open");
       var face = node.querySelector("[data-face]");
       var card = cardFor(currentPassPlayer());
-      if (card.kind === "imposter") {
+      if (card.kind === "hint") {
+        var listName = deckLabel(state.category);
+        var listLine = state.category === "mixed" ? "The words come from every list." : ("The list is " + listName + ".");
+        face.innerHTML = '<span class="seal">Imposter</span><b>You do not know the word.</b><small>' + escapeHtml(listLine) + "</small>";
+      } else if (card.kind === "imposter") {
         face.innerHTML = '<span class="seal">Imposter</span><b>You do not know the word.</b><small>Read the table. Write something that fits.</small>';
       } else {
         face.innerHTML = "<small>Your word</small><b>" + escapeHtml(card.word) + "</b>";
@@ -442,6 +474,30 @@
     }).join("");
   }
 
+  function deckLabel(id) {
+    var found = decks.filter(function (deck) { return deck.id === id; })[0];
+    return found ? found.label : "All";
+  }
+
+  function modeHint() {
+    if (state.mode === "hint") return "The imposter knows the list, not the word, and has to write into the trail.";
+    if (state.mode === "cousin") return "The imposter gets a cousin of the word and is not told. The slip gives them away.";
+    return "The imposter sees a blank role and has to write into everyone else's trail.";
+  }
+
+  function sampleLine() {
+    var row = samples[state.category] || samples.mixed;
+    return '<p class="sample"><b>' + escapeHtml(row[0]) + "</b> — " + escapeHtml(row[1]) + " is too close. " + escapeHtml(row[2]) + " still leaves work.</p>";
+  }
+
+  function voteLines() {
+    return '<ul class="votes">' + players().map(function (p) {
+      var target = state.votes[p.id];
+      var slip = target ? (slipText(target) || "—") : "—";
+      return "<li><span>" + escapeHtml(p.name) + "</span><b>" + escapeHtml(target ? nameOf(target) : "—") + "</b><em>" + escapeHtml(slip) + "</em></li>";
+    }).join("") + "</ul>";
+  }
+
   function chrome(label) {
     return '<div class="chrome"><button type="button" class="texty" id="quit">End</button><span>' + escapeHtml(label) + '</span><button type="button" class="texty" id="mute-play">' + (state.muted ? "Muted" : "Sound") + "</button></div>";
   }
@@ -463,13 +519,13 @@
           '<div class="stepper"><span>Imposters</span><button type="button" data-step="imposters" data-dir="-1" aria-label="Fewer imposters">−</button><strong>' + state.imposterCount + '</strong><button type="button" data-step="imposters" data-dir="1" aria-label="More imposters">+</button></div>' +
         "</div>" +
         '<div class="decks" role="group" aria-label="Word deck">' + deckButtons + "</div>" +
-        '<div class="seg" role="group" aria-label="Imposter card">' +
+        '<div class="seg modes" role="group" aria-label="Imposter card">' +
           '<button type="button" data-mode="classic" class="' + (state.mode === "classic" ? "is-on" : "") + '">Blank card</button>' +
+          '<button type="button" data-mode="hint" class="' + (state.mode === "hint" ? "is-on" : "") + '">Category</button>' +
           '<button type="button" data-mode="cousin" class="' + (state.mode === "cousin" ? "is-on" : "") + '">Lookalike</button>' +
         "</div>" +
-        '<p class="hint">' + (state.mode === "classic"
-          ? "The imposter sees a blank role and has to write into everyone else's trail."
-          : "The imposter gets a cousin of the word and is not told. The slip gives them away.") + "</p>" +
+        '<p class="hint">' + modeHint() + "</p>" +
+        sampleLine() +
         '<button type="button" class="btn ghost" id="voice">' + (state.voice ? "Clues are spoken" : "Clues are written") + "</button>" +
         '<details class="names"><summary>Name the seats</summary><div class="name-grid">' + nameFields + "</div></details>" +
         '<details class="rules"><summary>How a round goes</summary><ol>' +
@@ -566,6 +622,7 @@
         '<p class="hint">' + (state.voice
           ? "Say one word out loud. Do not say the secret, and do not name the deck."
           : "Type one word. It stays on the felt. Do not write the secret.") + "</p>" +
+        (second ? "" : sampleLine()) +
         field +
       "</section>";
     if (state.voice) {
@@ -621,6 +678,19 @@
     document.getElementById("ballot-next").addEventListener("click", finishBallot);
   }
 
+  function renderRevote() {
+    app.innerHTML =
+      '<section class="stage play">' +
+        chrome("Split vote") +
+        '<p class="kicker">No single slip won</p>' +
+        '<h2 class="who">Vote again</h2>' +
+        '<p class="hint">The same slips stay up. One more vote. A second split lets the imposter stay in.</p>' +
+        evidenceList(false) +
+        '<button type="button" class="btn primary" id="revote">Vote again</button>' +
+      "</section>";
+    document.getElementById("revote").addEventListener("click", openBallot);
+  }
+
   function renderSteal() {
     app.innerHTML =
       '<section class="stage play">' +
@@ -670,6 +740,8 @@
           '<h2 class="who">' + headline + "</h2>" +
           '<p class="hint">' + detail + "</p>" +
           '<p class="word-line">' + wordLine + "</p>" +
+          '<p class="kicker">Who voted</p>' +
+          voteLines() +
           evidenceList(false) +
           '<div class="scoreline"><span>Table</span><b>' + state.tableWins + "</b></div>" +
           '<div class="scoreline"><span>Imposters</span><b>' + state.imposterWins + "</b></div>" +
@@ -713,6 +785,7 @@
         }, 1000);
       }
     } else if (state.screen === "ballot") renderBallot();
+    else if (state.screen === "revote") renderRevote();
     else if (state.screen === "steal") renderSteal();
     else if (state.screen === "result") renderResult();
     bindChrome();
@@ -724,7 +797,7 @@
     var voice = document.body.getAttribute("data-voice");
     var known = { mixed: 1, food: 1, animals: 1, places: 1, home: 1, nature: 1, jobs: 1, sports: 1, school: 1, clothes: 1, screen: 1 };
     if (deck && known[deck]) state.category = deck;
-    if (mode === "classic" || mode === "cousin") state.mode = mode;
+    if (mode === "classic" || mode === "cousin" || mode === "hint") state.mode = mode;
     if (voice === "spoken") state.voice = true;
     if (voice === "written") state.voice = false;
   }

@@ -35,6 +35,11 @@ function play() {
     document.body.appendChild(script);
   });
   assert.ok(document.getElementById("start"), "game did not install");
+  assert.ok(document.querySelector('[data-mode="hint"]'), "category mode is on the table");
+  assert.ok(/too close/.test(document.body.textContent), "a clue sample is on the table");
+  click('[data-mode="hint"]');
+  assert.ok(/knows the list/.test(document.body.textContent), "category mode explains the list");
+  click('[data-mode="classic"]');
 
   function click(sel) {
     const node = document.querySelector(sel);
