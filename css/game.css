@@ -45,11 +45,21 @@ html, body { margin: 0; max-width: 100%; overflow-x: hidden; }
 
 body {
   min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   font-family: var(--sans);
   font-weight: 500;
   color: var(--paper);
   background: #100e0c;
 }
+
+.mast { order: 1; }
+
+#app { order: 2; }
+
+.site-nav { order: 3; }
+
+.read { order: 4; }
 
 body.playing { overflow: hidden; }
 
@@ -121,10 +131,12 @@ body.playing .stage {
 
 .table-wrap {
   position: relative;
-  height: 292px;
+  height: 240px;
   margin: 8px 0 12px;
   max-width: 100%;
 }
+
+body.playing .table-wrap { height: 188px; margin: 4px 0 8px; }
 
 .oval {
   position: absolute;
@@ -242,7 +254,7 @@ body.playing .stage {
 
 .stepper {
   display: grid;
-  grid-template-columns: 32px 1fr 32px;
+  grid-template-columns: 44px 1fr 44px;
   align-items: center;
   justify-items: center;
   gap: 2px 6px;
@@ -269,8 +281,8 @@ body.playing .stage {
 }
 
 .stepper button {
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   border: 1px solid var(--line);
 }
@@ -295,6 +307,7 @@ body.playing .stage {
 
 .deck {
   min-width: 0;
+  min-height: 44px;
   text-align: center;
   white-space: normal;
   line-height: 1.2;
@@ -442,13 +455,14 @@ summary { cursor: pointer; }
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  align-items: baseline;
+  align-items: center;
   text-align: left;
   background: var(--paper);
   color: var(--ink);
   border: 0;
   border-radius: 12px;
-  padding: 12px 12px;
+  min-height: 52px;
+  padding: 14px 12px;
   margin-top: 8px;
 }
 
@@ -478,6 +492,31 @@ summary { cursor: pointer; }
 }
 
 .play .btn.primary { margin-top: 12px; }
+
+body.playing .play {
+  min-height: 100dvh;
+  min-height: 100svh;
+}
+
+body.playing .hold {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+body.playing .paper { min-height: 148px; flex: 1; }
+
+body.playing .play > .btn.primary,
+body.playing .clue-form,
+body.playing .steal {
+  margin-top: auto;
+}
+
+body.playing .play .btn.primary {
+  position: sticky;
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  z-index: 4;
+}
 
 .read {
   width: auto;
